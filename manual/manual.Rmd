@@ -1,0 +1,46 @@
+---
+title: "BMDx2 Manual"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+
+```{r child = 'introduction.Rmd'}
+```
+
+```{r child = 'set_mode.Rmd'}
+```
+
+```{r child = 'data_input.Rmd'}
+```
+
+```{r child = 'filtering.Rmd'}
+```
+
+```{r child = 'bmd_analysis.Rmd'}
+```
+
+```{r child = 'bmd_parameters.Rmd'}
+```
+
+```{r child = 'bmd_results.Rmd'}
+```
+
+```{r child = 'bmd_comparison_different_experiments.Rmd'}
+```
+
+```{r child = 'gene_frequency.Rmd'}
+```
+
+```{r child = 'funmappone.Rmd'}
+```
+
+```{r child = 'gene_pairs.Rmd'}
+```
+
+```{r child = 'aop_ke_enrichment.Rmd'}
+```
+

@@ -1,0 +1,327 @@
+---
+title: "bmd_analysis"
+output: html_document
+date: '2023-02-08'
+---
+
+# BMD Analysis
+
+The benchmark dose (BMD) is the dose or concentration of a substance that corresponds to a specified level of response above or below that observed in a control or background population.
+The specified level of response within this definition is referred to as the benchmark response (BMR), while the statistical lower confidence bound of the BMD (referred to as BMDL) and the statistical upper confidence bound on the BMD (BMDU) have been typically used by regulatory agencies to set safe levels of exposure.
+BMD modelling involves fitting the experimental data, in this case, the gene expression values, to a selection of mathematical models, such as linear, second- or third- degree polynomial, an exponential model, hill model, asymptotic regression model, and Michaelis-Menten model. Additionally, when multiple models can be fitted to the same gene, their average consensus model can be also produced.
+The best model is selected by using a goodness of fit criteria, such as the Akaike information and the goodness-of-fit p-value. Alternatively, the average consensus model can be also used. 
+A predefined response level of interest, the BMR, is identified and the optimal model is used to predict the corresponding dose (BMD) (Abraham et al. 2012). Moreover, the European Food Safety Authority (EFSA) suggest reporting both the lower and upper 95% confidence limit on the BMD called BMDL and BMDU respectively (EFSA Scientific Committee
+et al. 2017). 
+
+## Model Fitting
+
+### Linear Model
+$$
+f(dose) = \beta_0 + \beta_1 dose
+$$
+Where $\beta_0$ is the control response (intercept), and $\beta_1$ is the slope.
+
+### Polynomial Model
+$$
+f(dose) = \beta_0 + \beta_1 dose + \beta_2 dose^2 + \ldots + \beta_n dose^n
+$$
+Where $\beta_0$ is the control response (intercept), $\beta_1, \dots, \beta_n$ are the polynomial coefficients, and $n$ is the degree of the polynomial.
+
+### Power Model
+$$
+f(dose) = \beta_0 + \beta_1 \times (dose)^\delta
+$$
+Where $\beta_0$ is the control response (intercept), $\beta_1$ is the slope, and $\delta$ is the power.
+
+### Hill Model
+$$
+f(dose) = \beta_0 + \frac{v \times dose^n}{K^n + dose^n}
+$$
+Where $\beta_0$ is the control response, $v$ is the maximum response, $K$ is the dose at which half the maximum response is reached, and $n$ is the Hill coefficient.
+
+### Exponential Model
+#### Exp2:
+$$
+f(dose) = a \times e^{\pm b \times dose}
+$$
+
+#### Exp3:
+$$
+f(dose) = a \times e^{\pm (b \times dose)^d}
+$$
+
+#### Exp4:
+$$
+f(dose) = a \times (c - (c-1) \times e^{\pm b \times dose})
+$$
+
+#### Exp5:
+$$
+f(dose) = a \times (c - (c-1) \times e^{\pm (b \times dose)^d})
+$$
+Where $a$ is the control response (intercept), $b$ is the slope, $c$ is the asymptote term, and $d$ is the power.
+
+### Log-Logistic Model
+#### Log-Logistic 5:
+$$
+f(dose, (b, c, d, e, f)) = c + \frac{d-c}{(1+\exp(b(\log(dose)-\log(e))))^f}
+$$
+If $f \neq 1$, the function is asymmetric; otherwise, it is symmetric (on a log scale).
+
+#### Log-Logistic 4:
+$$
+f(dose, (b, c, d, e)) = c + \frac{d-c}{1+\exp(b(\log(dose)-\log(e)))}
+$$
+The function is symmetric about the inflection point $e$.
+
+#### Log-Logistic 3:
+$$
+f(dose, (b, c, e)) = c + \frac{1-c}{1+\exp(b(\log(dose)-\log(e)))}
+$$
+The function is symmetric about the inflection point $e$.
+
+#### Log-Logistic 2:
+$$
+f(dose, (b, e)) = \frac{1}{1+\exp(b(\log(dose)-\log(e)))}
+$$
+The function is symmetric about the inflection point $e$.
+
+### Weibull Models
+#### Weibull 1.2:
+$$
+f(dose, (b, e)) = 1 - \exp(-b \cdot dose^e)
+$$
+This model describes an asymmetric sigmoidal growth curve.
+
+#### Weibull 1.3:
+$$
+f(dose, (b, d, e)) = d - d \cdot \exp(-b \cdot dose^e)
+$$
+Extends Weibull 1.2 by adding a scaling parameter $d$ that adjusts the upper asymptote.
+
+#### Weibull 1.4:
+$$
+f(dose, (b, c, d, e)) = c + (d - c) \cdot (1 - \exp(-b \cdot dose^e))
+$$
+Allows both upper ($d$) and lower ($c$) asymptotes, providing greater flexibility.
+
+#### Weibull 2.2:
+$$
+f(dose, (b, e)) = \exp(-\exp(b \cdot (\log(dose) - e)))
+$$
+A sigmoidal decay function where $e$ is the inflection point.
+
+#### Weibull 2.3:
+$$
+f(dose, (b, d, e)) = d \cdot \exp(-\exp(b \cdot (\log(dose) - e)))
+$$
+Extends Weibull 2.2 with a scaling parameter $d$, modifying the maximum response.
+
+#### Weibull 2.4:
+$$
+f(dose, (b, c, d, e)) = c + (d - c) \cdot \exp(-\exp(b \cdot (\log(dose) - e)))
+$$
+Generalizes Weibull 2.3 by incorporating both lower ($c$) and upper ($d$) asymptotes.
+
+### Michaelis-Menten Model
+#### MM.3 Model:
+$$
+f(dose, (c, d, e)) = c + \frac{d-c}{1+(e/dose)}
+$$
+This model increases as a function of dose, attaining the lower limit $c$ at dose $0$ and the upper limit $d$ for infinitely large doses. The parameter $e$ corresponds to the dose yielding a response halfway between $c$ and $d$.
+
+#### MM.2 Model:
+A two-parameter version of the Michaelis-Menten model is obtained by setting $c=0$.
+
+
+<!-- ## Model fitting -->
+
+<!-- ### Linear Model -->
+<!-- $$ -->
+<!-- f(dose) = \beta_0 + \beta_1 dose -->
+<!-- $$ -->
+<!-- Where $\beta_0$ is the control response (intercept), $\beta_1$ is the slope. -->
+
+<!-- ###  Polynomial model -->
+<!-- $$ -->
+<!-- f(dose) = \beta_0 + \beta_1 dose + \beta_2 dose^2 + \ldots + \beta_n dose^n -->
+<!-- $$ -->
+
+<!-- Where $\beta_0$ is the control response (intercept), $\beta_1 \dots \beta_n$ are the polynomial coefficients and $n$ is the degree of the polynomial. -->
+
+<!-- ###  Power model -->
+<!-- $$ -->
+<!-- f(dose) = \beta_0 + \beta_1 \times (dose)^\delta -->
+<!-- $$ -->
+
+<!-- Where $\beta_0$ is the control response (intercept), $\beta_1$ is the slope, and $\delta$ is the power. -->
+
+<!-- ###  Hill model -->
+<!-- $$ -->
+<!-- f(dose) = \beta_0 + \frac{v \times dose^n}{K^n + dose^n} -->
+<!-- $$ -->
+
+<!-- ### Exponential model -->
+<!-- $$Exp2: f(dose) = a \times e^{+/-b \times dose}$$ -->
+<!-- $$ -->
+<!-- Exp3: f(dose) = a \times e^{+/-(b \times dose)^d} -->
+<!-- $$ -->
+<!-- $$ -->
+<!-- Exp4: f(dose) = a \times (c - (c-1) \times e^{+/-b \times dose}) -->
+<!-- $$ -->
+<!-- $$ -->
+<!-- Exp5: f(dose) = a \times (c - (c-1) \times e^{+/-(b \times dose)^d}) -->
+<!-- $$ -->
+<!-- Where $a$ is the control response (intercept),\texttt{b} is the slope, \texttt{c} is the asymptote term, and \texttt{d} is the power.  -->
+
+### Average model
+
+BMDx implements model averaging through an AIC-based combination of models fitted to the same gene’s dose-response data. By calculating Akaike weights from the AIC values of each model, it assigns relative probabilities to the models, reflecting their support from the data. Predictions for benchmark dose (BMD), lower bounds (BMDL), and upper bounds (BMDU) are generated for each model and combined using these weights to produce averaged estimates. This approach ensures that the final predictions account for model uncertainty, integrating information from multiple models while penalizing overly complex or poorly fitting ones. 
+
+#### Model Averaging Methodology
+
+For every gene with multiple available models, the **average model** is obtained by weighting the predictions of the models by their AIC values. This ensures that models with a better fit contribute more to the final prediction while models with poorer fits have less influence.
+
+The following steps are followed:
+
+1. **Fitting individual models**: Each model is fitted separately to the dose-response data.
+2. **Computing AIC values**: The Akaike Information Criterion (AIC) values for each model are extracted.
+3. **Calculating Akaike Weights**:
+   - The difference between each model’s AIC and the minimum AIC is computed.
+   - These differences are transformed into Akaike weights using the softmax function:
+   
+   \[
+   w_i = \frac{\exp(-\frac{AIC_i - AIC_{min}}{2})}{\sum \exp(-\frac{AIC_i - AIC_{min}}{2})}
+   \]
+
+   where \( w_i \) represents the weight assigned to each model.
+   
+4. **Computing Weighted Predictions**: 
+   - Each model’s predictions for BMD, BMDL, and BMDU are obtained.
+   - The final averaged prediction is computed as:
+
+   \[
+   \hat{Y} = \sum w_i \cdot Y_i
+   \]
+
+   where \( Y_i \) is the prediction from each model.
+
+## Model comparison
+
+Model comparison is performed by means of the Akaike Information Criterion (AIC) implemented in the R stats package as follows: 
+
+$$ -2 x log-likelihood + k x npar$$  
+
+where $npar$ represents the number of parameters in the fitted model, and $k=2$ for the usual AIC. 
+
+## Model Variance  
+
+BMDx provides multiple options for handling variance assumptions when fitting dose-response models. Users can specify whether variance should be treated as **constant**, **nonconstant**, or **model-dependent**, or they can allow the tool to infer the appropriate variance assumption based on statistical testing.  
+
+### Variance Selection Options  
+
+BMDx supports four methods for variance estimation:  
+
+- **"infer"** (default): The tool automatically determines whether variance is constant or nonconstant using the **Levene test** for homogeneity of variance. If the test returns a p-value below the chosen significance threshold (e.g., 0.05), variance is classified as **nonconstant**. Otherwise, variance is assumed to be **constant**.  
+
+- **"constant"**: The model assumes homoscedasticity (equal variance across all observations). Variance is estimated using the **Mean Squared Error (MSE)** of the residuals, calculated as:  
+  \[
+  \sigma^2 = \frac{1}{n} \sum (r_i^2)
+  \]
+  where \( r_i \) represents the model residuals.  
+
+- **"nonconstant"**: Variance is assumed to be heteroscedastic (changing across dose levels). It is estimated using only the residuals from control samples (dose = 0), following the **Root Mean Squared Error (RMSE)** approach for the control group.  
+
+### Implementation Details  
+
+If `control_variance` is set to `"infer"`, BMDx applies the Levene test to assess variance homogeneity across groups. The test evaluates whether population variances are equal (null hypothesis). If the test result (p-value) is below the selected significance level, variance is classified as **nonconstant**; otherwise, it is considered **constant**.  
+
+For **constant variance**, the model estimates variance using the residuals from all samples. For **nonconstant variance**, only residuals from control samples (dose = 0) are used for variance estimation. If **model-based variance** is selected, a variance function is fitted to the residuals, and variance predictions are incorporated into a weighted regression model to refine the estimates dynamically.  
+
+By default, if no variance option is specified, BMDx will automatically infer the variance type based on statistical testing.  
+
+
+## Model Adverse Direction  
+
+The adverse direction of the models is determined based on the sign of specific model parameters. This estimation follows different approaches depending on the model type:  
+
+- **Linear Model:** The sign of the slope coefficient is used to determine the direction of the adverse response. A positive slope indicates a **positive (+1)** adverse reaction, while a negative slope indicates a **negative (-1)** adverse reaction.  
+
+- **Power Model:** The sign of the **b** coefficient is used to assess the adverse direction. A positive **b** coefficient corresponds to a **positive (+1)** adverse reaction, whereas a negative **b** coefficient corresponds to a **negative (-1)** adverse reaction.  
+
+- **Hill Model:** The sign of the **v** coefficient is used to estimate the adverse reaction direction. A positive **v** coefficient indicates a **positive (+1)** adverse reaction, while a negative **v** coefficient indicates a **negative (-1)** adverse reaction.  
+
+- **Polynomial, Exponential, and Models from the `drc` Package:** For these models, a linear regression is performed, and the sign of the slope coefficient is used to estimate the adverse reaction direction. A positive slope results in a **positive (+1)** adverse reaction, whereas a negative slope results in a **negative (-1)** adverse reaction.  
+
+
+## R² Calculation  
+
+The coefficient of determination (**R²**) is used to evaluate the goodness of fit of the models. It quantifies the proportion of variance in the observed data that is explained by the fitted model. Different model types use distinct approaches to compute **R²**, as described below:  
+
+- **Models from the `drc` package**:  
+  The **R²** value is computed using the variance-based formula:  
+  \[
+  R^2 = 1 - \frac{\text{Var}(\text{residuals})}{\text{Var}(\text{observed values})}
+  \]
+  where the residual variance is divided by the variance of the observed response values, providing a measure of how well the model accounts for the data variability.  
+
+- **Exponential Model**:  
+  The **R²** value is computed using the `modelr::rsquare()` function, which applies a standard squared correlation approach between observed and predicted values, ensuring consistency in nonlinear regression evaluation.  
+
+- **Hill Model**:  
+  The **R²** value is computed similarly to the exponential model, using `modelr::rsquare()`. This function assesses the proportion of explained variance by comparing fitted values with observed responses.  
+
+- **Linear Model**:  
+  For linear regression models, **R²** is derived from the standard formula used in `lm()` results:  
+  \[
+  R^2 = 1 - \frac{\sum (y_{\text{obs}} - y_{\text{pred}})^2}{\sum (y_{\text{obs}} - \bar{y})^2}
+  \]
+  where \( y_{\text{obs}} \) represents the observed response, \( y_{\text{pred}} \) the predicted values, and \( \bar{y} \) the mean of the observed responses. The **R²** value is extracted directly from `summary(lm())$r.squared`.  
+
+- **Polynomial Models**:  
+  Similar to the linear model, polynomial models use the standard **R²** computation from `summary(lm())$r.squared`. Since polynomials are fitted using linear regression techniques, their goodness-of-fit evaluation follows the same approach.  
+
+- **Power Model**:  
+  The **R²** value for power models is computed using `modelr::rsquare()`, as in the exponential and Hill models. This function provides a robust measure of the proportion of variance explained by the fitted model.  
+
+### Interpretation  
+
+An **R²** value close to 1 indicates that the model explains a high proportion of the variability in the observed data, while an **R²** value close to 0 suggests that the model does not provide a good fit. It is important to note that **R²** does not inherently account for model complexity, so it should be interpreted alongside other model selection criteria, such as AIC.  
+
+
+## BMR Selection and BMD estimation 
+
+The BMR can be computed by means of three different methods: standard deviation, relative and absolute. 
+The standard deviation method for normal distributed responses it is defined as  
+
+$$ \dfrac{| m(BMD) -m(0) |}{s(0)} = BMRF $$
+
+Where $s(0)$ is the standard deviation of the controls, and $m(0)$ is the predicted value of the response at the control level. The BMRF is the multiple of the standard deviation, whose default value1.349 corresponds to a 10% of difference with respect to the controls. Thus, the BMD (benchmark doses) is the estimated dose, whose predicted value $m(BMD)$ corresponds to the desired BMRF. 
+
+## BMDL/BMDU Estimation  
+
+The **Benchmark Dose Lower Bound (BMDL)** and **Benchmark Dose Upper Bound (BMDU)** values are estimated using confidence interval methods as suggested by Gaylor et al. (1998). This approach provides an uncertainty range for the Benchmark Dose (BMD), ensuring that the estimated dose-response relationship accounts for statistical variability.  
+
+### **Methodology**  
+
+The estimation of BMDL and BMDU is based on the **confidence interval of the predicted dose-response curve**. Given a predefined confidence level (e.g., 95%), the **lower (BMDL)** and **upper (BMDU)** bounds are determined by interpolating the benchmark response (BMR) within the confidence interval of the fitted model.  
+
+1. **Computation of the Confidence Interval**  
+   - A confidence interval is constructed around the predicted response using the model's standard error estimates.  
+   - The confidence level (e.g., 95%) defines the range within which the true dose-response relationship is expected to lie.  
+
+2. **Interpolation of BMDL and BMDU**  
+   - If the adverse direction of the response is **negative (-1)**, BMDL is computed as the **lower bound** of the confidence interval, while BMDU is the **upper bound**.  
+   - If the adverse direction is **positive (+1)**, BMDL is interpolated from the **upper bound**, while BMDU is obtained from the **lower bound**.  
+
+3. **Handling Errors and Warnings**  
+   - If the confidence interval estimation fails due to numerical issues or model constraints, BMDL and BMDU are assigned **NA values**, indicating that the bounds could not be determined.  
+
+### **Implementation in BMDx**  
+
+BMDL and BMDU are computed using the **`predict()`** function on a range of dose values spanning the observed data. The interpolation is performed using the **`stats::approx()`** function to estimate the benchmark dose bounds at the benchmark response (BMR) level. The estimated values are then stored as **BMDL** and **BMDU** in the model output.  
+
+This methodology is aligned with the **U.S. Environmental Protection Agency (EPA) recommendations** for benchmark dose estimation, following the framework outlined by Gaylor et al. (1998) [(link)](https://moscow.sci-hub.se/1557/eba6caff4cc96262194738e8280bdc7d/gaylor1998.pdf#view=FitH).  
+
+
+ 

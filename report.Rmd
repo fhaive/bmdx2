@@ -1,0 +1,762 @@
+---
+title: "REPORT"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  gVars: NA
+  input: NA
+  logVars: NA
+  srcDir: NA
+---
+
+# R version and platform
+```{r, , echo=FALSE}
+base::version
+```
+
+# Timestamp
+```{r, , echo=FALSE}
+print(Sys.time())
+```
+
+# Analysis mode
+```{r, , echo=FALSE}
+print(paste("Is the analysis run with a GLP mode? ", params$input$mode == "TRUE", sep = ""))
+```
+
+# Metadata parameters
+```{r, , echo=FALSE}
+width_p = 900
+
+cat(paste("Time point columns: ", params$logVars$phenoTPVar,"\n",
+            "Dose columns: ", params$logVars$phenoDoseVar, "\n", 
+            "Optional variables: ",params$logVars$phenoOptVar,sep = ""))
+```
+
+# Metadata description
+```{r, , echo=FALSE}
+if(!is.null(params$gVars$pheno_data_pie_chart_description)){
+  p = params$gVars$pheno_data_pie_chart_description
+  ggplotly(p,width = width_p)
+}
+
+if(!is.null(params$gVars$rendered_pheno_table))
+DT::datatable(gVars$rendered_pheno_table, filter="top",
+              selection = 'single',
+              options = list(
+                search = list(regex=TRUE, caseInsensitive=FALSE),
+                scrollX=TRUE,
+                ordering=T, 
+                rownames = FALSE
+              ))
+```
+
+# Expression data 
+```{r, , echo=FALSE}
+
+if(!is.null(params$input$x_ID) & !is.null(params$input$y_ID)){
+  cat(paste("X Variable Name: ", params$input$x_ID,"\n",
+            "Y Variable Name: ", params$input$y_ID, "\n",sep = ""))
+}
+
+```
+
+## Expression data 
+
+```{r, , echo=FALSE} 
+cat(paste("Mds plot for experiment: ",params$input$experiment_for_data, "\n", sep = "" ))
+if(!is.null(params$gVars$expression_mds)){
+  p = params$gVars$expression_mds
+  ggplotly(p,width = width_p)
+}
+
+```
+
+
+# Filtering analysis
+```{r, , echo=FALSE}
+cat(paste("Was anova performed? ", params$gVars$was_anova_performed,"\n",
+          "Was trend test performed? ", params$gVars$was_trend_test_performed, "\n",
+          "Was differential analysis performed? ", params$gVars$was_logFC_filtering_performed, "\n", 
+          "The finald filtering performd was: ", params$gVars$final_filtering_strategy, sep = ""))
+
+if(!is.null(params$gVars$final_filtering_strategy)){
+  #"anova" "trend test" "differential analysis"
+if(params$gVars$final_filtering_strategy == "anova"){
+  
+  Pval.th=as.numeric(params$input$anovaPvalTh)
+  Adjustment=params$input$anovaPvalAdj
+  Cores=as.numeric(params$input$anovaNCores)
+  
+ cat(paste("Anova parameters", "\n",
+          "p.value adjustment method: ", Adjustment,"\n",
+          "p.value threshold: ", Pval.th, "\n",
+          "number of cores: ", Cores, sep = ""))
+}
+
+if(params$gVars$final_filtering_strategy == "trent test"){
+    Pval.th=as.numeric(params$input$trendPvalTh)
+    Adjustment=params$input$TrendPvalAdj
+    Cores=as.numeric(params$input$trendNCores)
+    
+    cat(paste("Trend test parameters", "\n",
+            "p.value adjustment method: ", Adjustment,"\n",
+            "p.value threshold: ", Pval.th, "\n",
+            "number of cores: ", Cores, sep = ""))
+}
+
+if(params$gVars$final_filtering_strategy == "differential analysis"){
+  
+    cat(paste("Differential analysis parameters", "\n",
+          "p.value adjustment method: ", params$input$fcPvalAdj,"\n",
+          "p.value threshold: ", as.numeric(params$input$fcPvalTh), "\n",
+          "number of cores: ", as.numeric(params$input$fcNCores), sep = ""))
+}
+
+ DT::datatable(params$gVars$Anova_tab, filter="top",
+                options = list(
+                  search = list(regex=TRUE, caseInsensitive=FALSE), #MAYBE remove search bars
+                  scrollX=TRUE,
+                  ordering=T
+                )
+  )
+}
+
+if(!is.null(gVars$anova_pie)){
+  print(gVars$anova_pie)
+}
+          
+
+```
+
+
+# BMD Analysis setting
+```{r, , echo=FALSE}
+  cat(paste("Number of cores: ", params$input$BMDNCores, "\n",
+            "Maximum number of iterations for model fitting: ", params$input$BMDMaxIter,"\n",
+            "Data type: ", params$input$BMDdataType,"\n",
+            "Deviation type: ", params$input$BMDdeviationType,"\n",
+            "Variance type: ", params$input$variance_type,"\n",
+            "Response level: ", params$input$RespLev,"\n",
+            "Assumption of constant variance: ", params$input$constantVar,"\n",
+            "Use model variance when fitting the models: ", params$input$BMDmodelVar, "\n",
+            "Threshold for levene test: ", params$input$BMDsignificance, "\n",
+            "Confidence interval: ", params$input$conf_interval,"\n",
+            "Threshold on lack-of-fit: ", params$input$LOOF,"\n",
+            "Model selection settings:", params$input$BMDSettings, "\n",
+            paste("Fitted models: ",params$input$ModGroup, collapse = "\n"),sep = ""))
+
+```
+
+## Render BMD original results
+```{r, , echo=FALSE}
+mat = params$gVars$all_models_statistics
+if(!is.null(mat))
+DT::datatable(mat, filter="top",
+                  selection = 'single',
+                  options = list(
+                    search = list(regex=TRUE, caseInsensitive=FALSE), #MAYBE remove search bars
+                    scrollX=TRUE,
+                    ordering=T))
+```
+
+
+## BMD Filtering
+```{r, , echo=FALSE}
+print(paste("Where filter on BMD values applied? ", gVars$is_bmd_filtering_performed, sep = ""))
+
+if(gVars$is_bmd_filtering_performed == TRUE){
+  
+  cat(paste("Number of cores for the BMD filtering: ", params$input$BMDN_filter_Cores, "\n",
+            "Filter by NA values: ", params$input$filter_bmdl_na,"\n",
+            "Filter by Lack of Fit: ", params$input$filter_bmdl_loof,"\n",
+            "Threshold for the Lack of Fit Pvalue: ", params$input$bmdloofth,"\n",
+            "Apply Ratio filters: ", params$input$ratio_filter2,"\n",
+            "BMD/BMDL ratio: ", params$input$bmd_bmdl_th2,"\n",
+            "BMDU/BMD ratio: ", params$input$bmdu_bmd_th2,"\n",
+            "BMDU/BMDL ratio: ", params$input$bmdu_bmdl_th2,"\n",
+            "Filter by Lower Boundary: ", params$input$filter_bounds_bmdl_bmdu2_low,"\n",
+            "Lowest dose filter: ", params$input$min_dose_perc2,"\n",
+            "Filter by Upper Boundary: ", params$input$filter_bounds_bmdl_bmdu2_high,"\n",
+            "Highest dose filter: ", params$input$max_dose_perc2,"\n",
+            "Filter models with R2<th: ", params$input$filter_by_R2,"\n",
+            "Threshold R2: ", params$input$BMD_filter_r2,"\n",
+            "filter_by_monotonicity: ", params$input$BMD_filter_r2,
+            sep = ""))
+}
+```
+
+## Select optimal model
+```{r, , echo=FALSE}
+  print(paste("Is optimal model selection performed? ", params$gVars$is_optimal_model_selected, sep = ""))
+  if(params$gVars$is_optimal_model_selected == TRUE)
+  print(paste("Method to select the optimal model: ", params$input$select_best_model_options, sep = ""))
+```
+
+## Compute Model Average
+```{r, , echo=FALSE}
+  print(paste("Model average? ", params$gVars$is_average_computed, sep = ""))
+```
+
+## Render BMD final results, after filtering, and/or model average computation, and/or best model selection
+```{r, , echo=FALSE}
+mat = params$gVars$bmdlatestTable
+if(!is.null(mat))
+DT::datatable(mat, filter="top",
+                  selection = 'single',
+                  options = list(
+                    search = list(regex=TRUE, caseInsensitive=FALSE), #MAYBE remove search bars
+                    scrollX=TRUE,
+                    ordering=T))
+```
+
+
+# Comparison between time points
+
+## Number of genes by time
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$NGTime)){
+  cat(paste("Group by: ", params$input$tp_groupby1_input, "\n",
+            "Filter by: ", params$input$tp_filtercol_input, "\n", 
+            "Filter values: ", params$input$tp_filterby_input, sep = ""))
+
+p = params$gVars$NGTime
+if(!is.null(p)) ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+
+
+## BMD Distribution
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$BMD_dist_TP)){
+  cat(paste("Color by: ", params$input$BMDVals_colorby_input,"\n",
+          "Group by: ", params$input$BMDVals_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDVals_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDVals_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDVals_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMD_dist_TP
+if(!is.null(p)) ggplotly(p,width = width_p)
+
+}else{
+  print("Not performed")
+}
+
+```
+
+## BMDL Distribution
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$BMDL_dist_TP)){
+  cat(paste("Color by: ", params$input$BMDVals_colorby_input,"\n",
+          "Group by: ", params$input$BMDVals_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDVals_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDVals_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDVals_filterby_input,
+          sep = ""))
+
+
+p = params$gVars$BMDL_dist_TP
+if(!is.null(p)) ggplotly(p,width = width_p)
+
+}else{
+  print("Not performed")
+}
+
+```
+
+## BMDU Distribution
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$BMDU_dist_TP)){
+  cat(paste("Color by: ", params$input$BMDVals_colorby_input,"\n",
+          "Group by: ", params$input$BMDVals_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDVals_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDVals_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDVals_filterby_input,
+          sep = ""))
+
+
+p = params$gVars$BMDU_dist_TP
+if(!is.null(p)) ggplotly(p,width = width_p)
+
+}else{
+  print("Not performed")
+}
+
+```
+
+## BMDR Distribution
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$BMR_dist_TP)){
+  cat(paste("Color by: ", params$input$BMDVals_colorby_input,"\n",
+          "Group by: ", params$input$BMDVals_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDVals_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDVals_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDVals_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMR_dist_TP
+if(!is.null(p)) ggplotly(p,width = width_p)
+
+}else{
+  print("Not performed")
+}
+
+```
+
+
+## IC50 Distribution
+```{r, , echo=FALSE}
+
+if(!is.null(params$gVars$IC50_dist_TP)){
+  cat(paste("Color by: ", params$input$BMDVals_colorby_input,"\n",
+          "Group by: ", params$input$BMDVals_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDVals_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDVals_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDVals_filterby_input,
+          sep = ""))
+
+p = params$gVars$IC50_dist_TP
+if(!is.null(p)) ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+## BMD R2 fitting
+```{r, , echo=FALSE}
+if(!is.null(params$gVars$BMD_r2_fitting)){
+  cat(paste("Color by: ", params$input$LOOF_colorby_input,"\n",
+          "Group by: ", params$input$LOOF_groupby1_input, "\n",
+          "Group2 by: ", params$input$LOOF_groupby2_input, "\n",
+          "Filter by: ", params$input$LOOF_filtercol_input, "\n",
+          "Filter values: ", params$input$LOOF_filterby_input,
+          sep = ""))
+
+
+p = params$gVars$BMD_r2_fitting
+if(!is.null(p))
+ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+
+## BMD AIC fitting
+```{r, , echo=FALSE}
+if(!is.null(params$gVars$BMD_aic_fitting)){
+  cat(paste("Color by: ", params$input$LOOF_colorby_input,"\n",
+          "Group by: ", params$input$LOOF_groupby1_input, "\n",
+          "Group2 by: ", params$input$LOOF_groupby2_input, "\n",
+          "Filter by: ", params$input$LOOF_filtercol_input, "\n",
+          "Filter values: ", params$input$LOOF_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMD_aic_fitting
+if(!is.null(p))
+ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+
+## BMD p-value fitting
+```{r, , echo=FALSE}
+if(!is.null(params$gVars$BMD_pval_fitting)){
+  cat(paste("Color by: ", params$input$LOOF_colorby_input,"\n",
+          "Group by: ", params$input$LOOF_groupby1_input, "\n",
+          "Group2 by: ", params$input$LOOF_groupby2_input, "\n",
+          "Filter by: ", params$input$LOOF_filtercol_input, "\n",
+          "Filter values: ", params$input$LOOF_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMD_pval_fitting
+if(!is.null(p))
+ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+## BMD/BMLDL
+```{r, , echo=FALSE}
+if(!is.null(params$gVars$BMD_BMDL)){
+  cat(paste("Color by: ", params$input$BMDBMDL_colorby_input,"\n",
+          "Group by: ", params$input$BMDBMDL_groupby1_input, "\n",
+          "Group2 by: ", params$input$BMDBMDL_groupby2_input, "\n",
+          "Filter by: ", params$input$BMDBMDL_filtercol_input, "\n",
+          "Filter values: ", params$input$BMDBMDL_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMD_BMDL
+if(!is.null(p))
+ggplotly(p,width = width_p)
+}else{
+  print("Not performed")
+}
+
+```
+
+## Fitted models
+```{r, echo=FALSE}
+if(!is.null(params$gVars$BMD_dist_models)){
+  cat(paste("Group by: ", params$input$Fittedmodels_groupby1_input,"\n",
+          "Group2 by: ", params$input$Fittedmodels_groupby2_input, 
+          "Filter by: ", params$input$Fittedmodels_filtercol_input,
+          "Filter values: ", params$input$Fittedmodels_filterby_input,
+          sep = ""))
+
+p = params$gVars$BMD_dist_models
+if(!is.null(p)) plot(p)
+}else{
+  print("Not performed")
+}
+
+```
+
+
+## Compare experiments cumulative plot
+```{r, echo=FALSE}
+if(!is.null(gVars$bmdcompareexpRes_ecdf_plot)){
+  cat(paste("Variable of interest: ", params$input$BMDComExp_relvar_input, "\n",
+          "Group by: ", params$input$BMDComExp_groupby2_input,"\n",
+          "Other variables: ", params$input$BMDComExp_othervars_input,"\n",
+          "Filter by: ", params$input$compare_experiments_filtercol_input, "\n", 
+          "Filter values: ", params$input$compare_experiments_filterby_input, sep = ""))
+
+
+ggplotly(params$gVars$bmdcompareexpRes_ecdf_plot)
+}else{
+  print("Not performed")
+}
+
+```
+
+## Compare experiments upset plot
+```{r, echo = FALSE}
+
+if(!is.null(params$gVars$bmdcompareexpRes_upset_plot)){
+  cat(paste("Maximum number of intersection: ", params$input$maxInt, "\n",
+          "Group by: ", params$input$groupby,"\n",
+          "Order by: ", params$input$orderby,"\n", sep = ""))
+
+
+params$gVars$bmdcompareexpRes_upset_plot
+}else{
+  print("Not performed")
+}
+
+
+```
+
+# Gene frequency
+```{r, echo=FALSE}
+cat(paste(
+      "Experiment id: ",params$input$select_exp_id, "\n",
+      "Group by: ", params$input$gene_frequency_groupby_input,"\n",
+      "Order by: ", params$input$gene_frequency_splitby_input,"\n", sep = ""))
+
+DT::datatable(gVars$gene_freq_m_list[[params$input$select_exp_id]])
+```
+
+```{r, echo=FALSE}
+
+if(!is.null(gVars$gene_freq_lineplot_plot_list[[params$input$select_exp_id]])){
+  ggplotly(gVars$gene_freq_lineplot_plot_list[[params$input$select_exp_id]])
+}else{
+  print("Not performed")
+}
+```
+
+# FunMappONE
+```{r, echo=FALSE}
+if(!is.null(gVars$EnrichDatList)){
+  
+cat(paste("---- ENRICHMENT PARAMETERS ----\n",
+          "Organisms: ", params$input$organism, "\n",
+          "GeneID: ", params$input$idtype, "\n",
+          "Select Functional Annotation: ", params$input$EnrichType, "\n",
+          "Select GO: ", params$input$GOType, "\n",
+          "Correction Method: ", params$input$pcorrection, "\n",
+          "P-value threshold: ", params$input$pvalueTh, "\n",
+          "Significant Results only: ", params$input$only_significant, "\n",
+          "Annotated genes only: ", params$input$only_annotated, "\n",
+          "Minimum number of genes in the intersection: ", params$input$min_intersection, "\n",
+          "Aggregation Function: ", params$input$aggregation, "\n",
+          "Plot modification: ", params$input$continuous, "\n",
+          "Choose Values Type: ", params$input$MapValueType, "\n",
+          sep = "")
+)
+  
+} else {
+  print("No enrichment performed were provided.")
+}
+```
+
+## Heatmap
+```{r, echo=FALSE, fig.width=10, fig.height=8}
+if(!is.null(gVars$EnrichDatList) & !is.null(gVars$toPlot)){
+  print(ggplotify::as.ggplot(gVars$toPlot))
+}else {
+  print("No heatmap computed.")
+}
+```
+
+## Range plot
+```{r, echo=FALSE, fig.width=10, fig.height=8}
+if(!is.null(gVars$EnrichDatList) & !is.null(gVars$funmappone_range_plot)){
+    ggplotly(gVars$funmappone_range_plot)
+}else {
+  print("No range plot computed.")
+}
+
+
+```
+
+#KE enrichment analysis
+## Range plot
+```{r, echo=FALSE, fig.width=10, fig.height=8}
+
+cat(paste("---- KE & AOP ENRICHMENT PARAMETERS ----\n",
+          "Timestamp: ", Sys.time(), "\n",
+          
+          # KE enrichment
+          "KE: Significant p-value threshold: ", params$input$ke_sig_pval, "\n",
+          "KE: Correction method: ", params$input$ke_correction_method, "\n",
+          "KE: Significant Results only: ", params$input$ke_only_significant, "\n",
+          
+          # AOP enrichment
+          "AOP: Significant p-value threshold: ", params$input$aop_sig_pval, "\n",
+          "AOP: Correction method: ", params$input$aop_correction_method, "\n",
+          "AOP: Significant Results only: ", params$input$aop_only_significant, "\n",
+          
+          # Shared / advanced parameters
+          "Minimum AOP length for fingerprint: ", params$input$min_aop_length_fingerprint, "\n",
+          "Percentage enriched KE: ", params$input$percentage_enriched_ke, "\n",
+          "Aggregation function: ", params$input$KE_aggregation_function, "\n",
+          
+          # Background option
+          "User-provided background: ", ifelse(params$input$user_background, "TRUE", "FALSE"), "\n",
+          "User-provided background file: ", ifelse(params$input$user_background, params$input$background$name, ""), "\n",
+          
+          sep = "")
+)
+```
+
+# KE enrichment table
+```{r, echo=FALSE}
+if(!is.null(gVars$KE_enrichment_res)){
+    toPlotData = gVars$KE_enrichment_res
+DT::datatable(toPlotData,
+                              filter  =  "top",
+                              selection  =  'single',
+                              options  =  list(search  =  list(regex  =  TRUE, caseInsensitive  =  FALSE), #MAYBE remove search bars
+                                               scrollX  =  TRUE,
+                                               ordering  =  T,
+                                               pageLength = 5))
+
+}else {
+  print("No KE enrichment.")
+}
+```
+
+```{r, echo=FALSE}
+if(!is.null(gVars$plot_bmd_of_the_genes_in_a_ke)){
+    ggplotly(gVars$plot_bmd_of_the_genes_in_a_ke)
+}else{
+  print("No data to plot")
+}
+```
+
+##KEKE Network 
+```{r, echo=FALSE}
+cat(paste("---- KE / AOP NETWORK PARAMETERS ----\n",
+          
+          # Validation-related parameters
+          "KE filtering by AOP fingerprint: ", params$input$KEr_filter_ke_by_aop_fingerprint, "\n",
+          "Enlarge KE selection: ", params$input$KEr_enlarge_ke_selection, "\n",
+          "Experiment selected: ", params$input$experiment_KEr, "\n",
+          #"Time point selected: ", params$input$time_point_KEr, "\n",   # uncomment if used
+          
+          # Organism / gene mapping
+          "KE organism: ", params$input$ke_organism, "\n",
+          "KE gene identifier type: ", params$input$ke_gene_identifier, "\n",
+          "Convert to gene symbols: ", params$input$convert_to_gene_symbol, "\n",
+          
+          # Network parameters
+          "Maximum path length: ", params$input$max_path_length, "\n",
+          "Number of AOs: ", params$input$n_AOs, "\n",
+          "Number of MIEs: ", params$input$n_MIEs, "\n",
+          
+          # Grouping (if used)
+          "Group by (ssbd): ", params$input$KEr_group_by_ssbd, "\n",
+          
+          sep = "")
+)
+```
+
+```{r, echo=FALSE}
+
+if(!is.null(gVars$KEr_net_list)){
+  
+experiment = params$input$experiment_KEr
+selected_time = params$input$time_point_KEr
+netList = gVars$KEr_net_list
+vn = netList[[paste(experiment, selected_time, sep = "_")]]
+
+print(experiment)
+print(selected_time)
+print(class(vn))
+
+vn = vn %>%
+  visPhysics(enabled = TRUE) %>%
+visEvents(doubleClick = "
+      function(params) {
+if(params.nodes.length > 0){
+  var nodeId = params.nodes[0];
+  var node = this.body.data.nodes.get(nodeId); // get full node data
+  node.physics = false; // change only physics
+  this.body.data.nodes.update(node); // update with full data
+}
+      }")
+
+vn
+}else{
+  print("No network displayed")
+}
+
+```
+
+## Molecular information on top of AOPs
+```{r, echo=FALSE}
+# small formatter for clean output
+fmt <- function(x) {
+  if (is.null(x)) return("—")
+  if (isTRUE(x))  return("TRUE")
+  if (identical(x, FALSE)) return("FALSE")
+  as.character(x)
+}
+
+cat(paste(
+  "---- AOP VISNETWORK: INPUTS ----\n",
+  "AOP ID (AOP_visnetwork): ",                 fmt(params$input$AOP_visnetwork), "\n",
+  "Experiment (experiment_selection_AOP_visplot): ", fmt(params$input$experiment_selection_AOP_visplot), "\n",
+  "Time point (time_point_selection_AOP_visplot): ", fmt(params$input$time_point_selection_AOP_visplot), "\n",
+  "Only direct relations (AOP_visnet_only_direct): ", fmt(params$input$AOP_visnet_only_direct), "\n",
+  "KE organism (ke_organism): ",               fmt(params$input$ke_organism), "\n",
+  "KE gene identifier (ke_gene_identifier): ", fmt(params$input$ke_gene_identifier), "\n",
+  sep = "")
+)
+```
+
+```{r}
+
+if(!is.null(gVars$KE_and_TF_network_for_AOP)){
+  vn = gVars$KE_and_TF_network_for_AOP
+  vn
+}else{
+  print("No network computed")
+}
+```
+
+## Key players in AOP along with their PPI interactions
+```{r, echo=FALSE}
+# formatter for clean text
+fmt <- function(x) {
+  if (is.null(x)) return("—")
+  if (isTRUE(x))  return("TRUE")
+  if (identical(x, FALSE)) return("FALSE")
+  as.character(x)
+}
+
+cat(paste(
+  "---- MOLECULAR INFORMATION ON TOP OF AOPs: INPUTS ----\n",
+  "AOP ID (AOP_visnetwork): ",                 fmt(params$input$AOP_visnetwork), "\n",
+  "Experiment (experiment_selection_AOP_visplot): ", fmt(params$input$experiment_selection_AOP_visplot), "\n",
+  "Time point (time_point_selection_AOP_visplot): ", fmt(params$input$time_point_selection_AOP_visplot), "\n",
+  "Only direct relations (AOP_visnet_only_direct): ", fmt(params$input$AOP_visnet_only_direct), "\n",
+  "KE organism (ke_organism): ",               fmt(params$input$ke_organism), "\n",
+  "KE gene identifier (ke_gene_identifier): ", fmt(params$input$ke_gene_identifier), "\n",
+  sep = "")
+)
+```
+
+```{r, echo=FALSE}
+
+if(!is.null(gVars$AOP_ppi_key_players)){
+  vn = gVars$AOP_ppi_key_players
+  vn
+}else{
+  print("No network computed")
+}
+```
+
+# Gene pairs computation
+```{r, echo=FALSE}
+fmt <- function(x) {
+  if (is.null(x)) return("—")
+  if (isTRUE(x))  return("TRUE")
+  if (identical(x, FALSE)) return("FALSE")
+  as.character(x)
+}
+
+cat(paste(
+  "---- GENE PAIR COMPARISON: INPUTS ----\n",
+  "Organism (gene_comparison_organism): ", 
+      fmt(params$input$gene_comparison_organism), "\n",
+  "Experiment filter (Experiment_gene_comparison_filter_value): ", 
+      fmt(params$input$Experiment_gene_comparison_filter_value), "\n",
+  "Time filter (Time_gene_comparison_filter_value): ", 
+      fmt(params$input$Time_gene_comparison_filter_value), "\n",
+  sep = "")
+)
+
+```
+
+## Gene pairs table
+```{r, echo=FALSE}
+if(!is.null(gVars$edge_presence_ppi)){
+  edge_presence_ppi = gVars$edge_presence_ppi
+ DT::datatable(edge_presence_ppi, filter="top",
+                      rownames = F, selection = 'single',
+                      options = list(
+                        search = list(regex=TRUE, caseInsensitive=FALSE),
+                        scrollX=TRUE,
+                        ordering=T))
+  
+}else{
+  print("No gene pairs computed")
+}
+ 
+```
+
+```{r, echo=FALSE}
+
+if(!is.null(gVars$gene_pairs_print_models)){
+  p = gVars$gene_pairs_print_models
+ ggplotly(p)
+  
+}else{
+  print("No gene pairs computed")
+}
+
+```

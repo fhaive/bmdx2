@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Rprofile
+.access_tokens.R
+renv/
+.DS_Store
+GLP_logs/
+*.notes

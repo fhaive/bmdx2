@@ -1,0 +1,25 @@
+---
+title: "introduction"
+output: html_document
+date: '2023-02-08'
+---
+
+# Introduction
+
+BMDx is an R Shiny graphical interface tool for the dose dependent analysis of 
+transcriptomic data.  
+
+BMDx implements a multi-step pipeline that include the following steps:
+- Set mode
+- Load phenotype data
+- Load experimental data, e.g. normalized expression matrix and vst normalized expression matrix with blind=False for microarray and RNA-seq downstream analysis
+- Filtering
+- Benchmark dose analysis
+- Functional enrichment with the FunMappOne tool, e.g. KEGG pathways
+- Gene pairs analysis
+- AOP and KE enrichment
+- Download report
+
+BMDx not only allows the user to compare the results between multiple time points, but also multiple experiments at once. Results along the way are visualised as several types of plots and the output can be downloaded as Excel files or figures in pdf format at multiple steps of the analysis. 
+
+The final results include the estimation of effective doses (BMD/BMDL/BMDU) for each dose-dependent gene. These estimates can be used for further analysis to help construct a biological interpretation of the exposure of interest.

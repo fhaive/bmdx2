@@ -1,0 +1,13 @@
+---
+title: "set_mode"
+output: html_document
+date: '2023-02-08'
+---
+
+
+# Set mode
+
+BMDx is implemented to work in a dual mode: GLP (Good Laboratory Practice) and non-GLP mode. If GLP mode is selected by the user, all the steps of the analysis will be recorded in a log file.
+Furthermore, at every step of the analysis the user will be prompted to add information about the analysis. 
+First, the user will be asked to give a description about the aims of the analysis. 
+Next, for every step that the user perform, an explanation for performing the step and the selected values for the parameters will be requested. 

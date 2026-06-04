@@ -1,0 +1,90 @@
+---
+title: "AOP and KE enrichment"
+output:
+  html_document:
+    df_print: paged
+date: "2023-02-21"
+---
+
+# AOP and KE enrichment
+
+Enrichment analysis is performed using Fisher's exact considering recent annotation of genes to key events (KE) and adverse outcome pathways (AOPs) from AOP-Wiki (https://aopwiki.org/), for more [details](Saarimäki, L.A., Fratello, M., Pavel, A. et al. A curated gene and biological system annotation of adverse outcome pathways related to human health. Sci Data (2023). https://doi.org/10.1038/s41597-023-02321-w). The following parameters are required to run the enrichment:
+
+- **Select organism:** Choose a species related to humans, such as human, mouse, or rat. 
+- **Select gene identifier:**: Select a gene identifier type, which can be Ensembl, Entrez, or symbol.
+- **(KEs) Enrichment Pval:** Specify the p-value threshold to consider a Key Event (KE) as significantly enriched.
+- **(AOPs) Enrichment Pval:** Specify the p-value threshold to consider an Adverse Outcome Pathway (AOP) as significantly enriched.
+- **Minimum length AOP:** Define the minimum size of an AOP to be considered.
+- **(KEs) Correction method:** Choose a method to adjust p-values for KE enrichment results, such as Bonferroni correction or False Discovery Rate (FDR).
+- **(AOPs) Correction method:** Choose a method to adjust p-values for AOP enrichment results, such as Bonferroni correction or False Discovery Rate (FDR).
+- **Percentage of enriched KE in AOP:** Specify the minimum proportion of Key Events (KEs) that are enriched within the entire AOP.
+
+User has the option to add a background file or use existing background from BMDx app by selecting "use annotate gene as background".
+
+There are options to select that allow you to focus on KEs and AOPs that are significant.
+
+![AOP and KE enrichment parameters.](imgs/aop/aop_ke_parameters.png)
+
+### KE enrichment results
+
+In this section, KE enrichment results can be visualized as a table. The results are exportable. In addition, POD distribution values can be visualized by KE type, KE level, and across KE annotation biological systems as box plots. The results are exportable.
+
+![KE enrichment table results.](imgs/aop/ke_table.png)
+
+![BMDL by KE type.](imgs/aop/bmdl_by_ke_type.png)
+
+![BMD by KE type.](imgs/aop/bmd_by_ke_type.png)
+
+![BMDU by KE type.](imgs/aop/bmdu_by_ke_type.png)
+
+![BMD by KE level.](imgs/aop/bmd_by_ke_level.png)
+
+![BMD by KE annotation to biological systems.](imgs/aop/bmd_by_ke_annotation_to_systems.png)
+
+
+### KE-KE network
+
+Within the KEr window, results can be visualized in a KE-KE network. Select the experiment you are interested in and create a KE-KE network. If you want to focus on KEs associated with specific SSbD categories related to safety, you can choose among the SSbD categories. The default visualization "enlarges KE", meaning it considers both enriched KEs and non-enriched KEs connected to enriched KEs, providing a comprehensive view of the network. This MOA reconstruction is based on a recent approach that prioritizes plausible molecular initiating events (MIEs) and adverse outcomes (AOs) and maps them back to the AOP network. For more details, refer to Del Giudice et al. (2024). This metric considers the proximity to an enriched KE on the KE-KE network and the presence of significantly altered genes in the event's annotated gene sets.
+Non-enriched KEs are colored in gray, while enriched KEs are colored in red. Different shapes represent the types of KEs. The user can also filter based on the max path length, number of AOs and MIEs to focus on a specific section of the network. Clicking on events in the network allows you to see more information about the specific event. 
+
+![MOA reconstruction of lung fibrosis.](imgs/aop/moa_reconstruction_lung_fibrosis.png)
+
+KE-KE networks of different conditions can also be compared by selecting common elements between conditions/experiments or unique elements. For example, "Network A minus Network B" shows what is unique to Network A.
+
+![Comparison of KEKE network across conditions.](imgs/aop/network_comparison.png)
+
+### AOP Enrichment results
+
+The AOP enrichment table presents all enrichment results. The results are exportable.
+
+![AOP enrichment table results.](imgs/aop/aop_table.png)
+
+
+Moreover, the AOP section includes a mechanistic visualization that contextualizes KEs within an AOP and it integrates with data from PPI to illustrate how they are interconnected through molecular interactions. 
+
+
+## Individual AOP visualization
+
+![AOP angiotensin II leading to lung fibrosis after bleomycin exposure at 72 hours.](imgs/aop/aop_vis_network.png)
+The top relevant genes have been ranked according to multiple network properties that reflect their connectivity within the PPI network. To visualize the top most relevant genes based on a user defined number, the user should double click on the enriched KEs in the figure at the bottom of the page. These genes will then appear. KEs that share those genes will be considered together and separated by semicolon. Each time a different id of interest is selected, it is important to reinitialize the clustering to ensure accurate and updated results.
+
+
+![Enriched KEs of the AOP Angiotensis II leading to fibrosis.](imgs/aop/aop_ranked_genes.png)
+
+![Top genes within the enriched KEs of the AOP Angiotensis II leading to fibrosis.](imgs/aop/aop_ranked_genes_2.png)
+
+![Leading genes found in the enriched KEs of the Angiotensin II AOP linked to fibrosis, with info boxes detailing each gene characteristics.](imgs/aop/aop_ranked_genes_3.png)
+
+In addition, the tool allows to visualize the distribution of BMD values across AOPs grouped by SSbD categories and reports the number of AOPs per category. 
+
+![Distribution of BMD values grouped by SSbD categories](imgs/aop/distribution_bmd_per_ssbd_category.png)
+
+
+### AOP fingerprint 
+
+Once the enrichment analysis is completed, users can visualize the enriched AOPs using a bubble plot or range plot. They have the option to display either AOP names or AOP IDs on the y-axis. The font size, as well as the plot's height and width, can be adjusted for optimal export as a PDF. Additionally, AOP enrichment results can be exported. Users can also choose to focus on a specific range of AOPs that fall within particular SSbD categories related to safety, for example, "Carcinogenicity".
+
+![AOP fingerprint bubble plot.](imgs/aop/bubble_plot_aop.png)
+
+![AOP fingerprint range plot.](imgs/aop/range_plot_aop.png)
+
